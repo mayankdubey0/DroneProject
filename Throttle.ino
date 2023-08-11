@@ -32,10 +32,10 @@ void loop()
     previousMillis = currentMillis;
 
     // Acquiring all the channels values
-    short throttle      =   ppm.read_channel(THROTTLE);
-    short roll          =   ppm.read_channel(ROLL);
-    short pitch         =   ppm.read_channel(PITCH);
-    short yaw           =   ppm.read_channel(YAW);
+    short throttle      =   (-ppm.read_channel(THROTTLE)+1500)/2;
+    short roll          =   (-ppm.read_channel(ROLL)+1500)/2;
+    short pitch         =   (-ppm.read_channel(PITCH)+1500)/2;
+    short yaw           =   (-ppm.read_channel(YAW)+1500)/2;
 
     // Print the values for the Arduino Serial Plotter
     Serial.print("Throttle:");        Serial.print(throttle);       Serial.print(" ");
