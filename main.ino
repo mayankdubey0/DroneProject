@@ -48,6 +48,10 @@ float gyro_angleX;
 float gyro_angleY;
 float gyro_angleZ;
 
+float acc_angleX;
+float acc_angleY;
+float acc_angleZ;
+
 float data[6];
 
 float time1 = millis()/1000;
@@ -142,14 +146,16 @@ void loop()
     gyro_angleY = data[4] * elapsed_time;
     gyro_angleZ = data[5] * elapsed_time;
     time1 = time2;
-  
+
+    acc_angleX = arccos(data[0]/9.81);
+    acc_angleY = arccos(data[1]/9.81);
    
   
-    Serial.print(rad2deg(data[3]));
+    Serial.print(rad2deg(acc_angleX));
     Serial.print("/");
-    Serial.print(rad2deg(data[4]));
+    Serial.print(rad2deg(acc_angleY));
     Serial.print("/");
-    Serial.println(rad2deg(data[5]));
+    Serial.println(rad2deg(0));
   }
 }
 
