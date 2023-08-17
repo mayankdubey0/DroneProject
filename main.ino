@@ -78,8 +78,21 @@ unsigned long previousMillis = 0;
 
 bool callib = true;
 
-Servo ESC1;
-Servo ESC2;
+Servo motor1;
+Servo motor2;
+
+float target_angleX = 0;
+float target_angleX = 0;
+
+float error_X;
+float prev_errorX;
+float d_errorX;
+
+float error_Y;
+float prev_errorY;
+float d_errorY;
+
+
 
 void setup()
 {
@@ -100,8 +113,8 @@ void setup()
   }
   
   // Start the serial port to display data 
-  ESC1.attach(9, 1000, 2000);
-  ESC2.attach(10, 1000, 2000);
+  motor1.attach(9, 1000, 2000);
+  motor2.attach(10, 1000, 2000);
 
   // Start the PPM function on PIN A0
   ppm.begin(A0, false);
@@ -120,15 +133,15 @@ void loop()
     short pitch         =   (-ppm.read_channel(PITCH)+1500)/2;
     short yaw           =   (-ppm.read_channel(YAW)+1500)/2;
 
-    ESC1.write(throttle);
-    ESC2.write(throttle);
+    motor1.write(throttle);
+    motor.write(throttle);
     Serial.print("Throttle:");        Serial.print(throttle);       Serial.print(" ");
     Serial.print("Roll:");            Serial.print(roll);           Serial.print(" ");
     Serial.print("Pitch:");           Serial.print(pitch);          Serial.print(" ");
     Serial.print("Yaw:");             Serial.print(yaw);            Serial.print("\n");
 
 
-     sensors_event_t a, g, temp;
+    sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
   
     callibrate_acc(a, g, temp);
@@ -149,7 +162,14 @@ void loop()
 
     acc_angleX = arccos(data[0]/9.81);
     acc_angleY = arccos(data[1]/9.81);
-   
+
+    error_X = acc_angleX - target_angleX;
+    error_Y = acc_angleY - target_angleY;
+
+    motor1.write(throttle + PID(1, error_X, prev_errorX, elapsed_time))
+    motor2.write(throttle - PID(1, error_X, prev_errorX, elapsed_time))
+
+    
   
     Serial.print(rad2deg(acc_angleX));
     Serial.print("/");
@@ -191,6 +211,12 @@ void callibrate_gyro(){
     gyro_biasZ = kalman(gyro_meas_biasZ, gyro_prev_guessZ);
     gyro_prev_guessZ = gyro_biasZ;
   }
+}
+
+
+float PID(float K, float error, float prev_error, float time){
+  float change = error * K + K * (error - prev_error)/time;
+  return change;
 }
 
 float get_angle(float z){
