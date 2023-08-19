@@ -20,6 +20,9 @@ bool callib = true;
 
 Servo ESC1;
 Servo ESC2;
+Servo ESC3;
+Servo ESC4;
+
 
 float xG;
 float yG;
@@ -57,26 +60,39 @@ float time1 = millis()/1000;
 float time2 = 0;
 float elapsed_time = 0;
 
+float integral = 0;
+
+float target_x = 0;
+float target_y = 0;
+
+float errorX;
+float errorY;
+
+float prev_errorX = 0;
+float prev_errorY = 0;
+
 Adafruit_MPU6050 mpu;
 
 void setup(void) {
   Serial.begin(19200);
   // Try to initialize!
   if (!mpu.begin()) {
-    //Serial.println("Failed to find MPU6050 chip");
+    Serial.println("Failed to find MPU6050 chip");
     while (1) {
       delay(10);
     }
   }
-  //Serial.println("MPU6050 Found!");
+  Serial.println("MPU6050 Found!");
   delay(100);
 
   ESC1.attach(9, 1000, 2000);
   ESC2.attach(10, 1000, 2000);
+  ESC3.attach(11, 1000, 2000);
+  ESC4.attach(12, 1000, 2000);
 
   ppm.begin(A0, false);
 
-  callibrate_gyro();
+  //callibrate_gyro();
 }
 
 
@@ -101,23 +117,35 @@ void loop() {
     data[1] = a.acceleration.y - acc_biasY;
     data[2] = a.acceleration.z - acc_biasZ;
 
-    time2 = millis()/1000;
+    // Serial.print(rad2deg(data[0]));
+    // Serial.print("/");
+    // Serial.print(rad2deg(data[1]));
+    // Serial.print("/");
+    // Serial.println(rad2deg(data[2]));
+
+    time2 = millis();
     elapsed_time = time2 - time1;
-    gyro_angleX = data[0] * elapsed_time;
-    gyro_angleY = data[1] * elapsed_time;
-    gyro_angleZ = data[2] * elapsed_time;
+
+    errorX = target_x - sin(data[0]/9.81);
+    errorY = target_y - sin(data[1]/9.81);
+
+    motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time);
+    motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time);
+    motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time);
+    motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time);
+
+    Serial.print(motor1);
+    Serial.print("/");
+    Serial.println(motor2);
+
     time1 = time2;
+    prev_errorX = errorX;
+    prev_errorY = errorY;
 
-    Serial.print(rad2deg(data[0]));
-    Serial.print("/");
-    Serial.print(rad2deg(data[1]));
-    Serial.print("/");
-    Serial.println(rad2deg(data[2]));
-
-    
-
-    ESC1.write(throttle);
-    ESC2.write(throttle);
+    ESC1.write(motor1);
+    ESC2.write(motor2);
+    ESC3.write(motor3);
+    ESC4.write(motor4);
 
 
   }
@@ -134,29 +162,30 @@ void callibrate_acc(sensors_event_t a, sensors_event_t g, sensors_event_t temp){
     acc_biasY = a.acceleration.y;
     acc_biasZ = a.acceleration.z - 9.81;
     cal = false;
+    Serial.println("DONE CALLIBRATING!");
   }
 }
 
-void callibrate_gyro(){
-  for(int i =0;i<1000;i++){
-    Serial.println(i);
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+// void callibrate_gyro(){
+//   for(int i =0;i<1000;i++){
+//     Serial.println(i);
+//     sensors_event_t a, g, temp;
+//     mpu.getEvent(&a, &g, &temp);
 
-    gyro_meas_biasX = g.gyro.x;
-    gyro_meas_biasY = g.gyro.y;
-    gyro_meas_biasZ = g.gyro.z - 9.81;
+//     gyro_meas_biasX = g.gyro.x;
+//     gyro_meas_biasY = g.gyro.y;
+//     gyro_meas_biasZ = g.gyro.z - 9.81;
 
-    gyro_biasX = kalman(gyro_meas_biasX, gyro_prev_guessX);
-    gyro_prev_guessX = gyro_biasX;
+//     gyro_biasX = kalman(gyro_meas_biasX, gyro_prev_guessX);
+//     gyro_prev_guessX = gyro_biasX;
 
-    gyro_biasY = kalman(gyro_meas_biasY, gyro_prev_guessY);
-    gyro_prev_guessY = gyro_biasY;
+//     gyro_biasY = kalman(gyro_meas_biasY, gyro_prev_guessY);
+//     gyro_prev_guessY = gyro_biasY;
 
-    gyro_biasZ = kalman(gyro_meas_biasZ, gyro_prev_guessZ);
-    gyro_prev_guessZ = gyro_biasZ;
-  }
-}
+//     gyro_biasZ = kalman(gyro_meas_biasZ, gyro_prev_guessZ);
+//     gyro_prev_guessZ = gyro_biasZ;
+//   }
+// }
 
 float get_angle(float z){
   float angle;
@@ -179,7 +208,9 @@ float kalman(float meas, float prev_guess){
   return new_guess;
 }
 
-float PID(float K1, , float error, float prev_error, float time){
-  float change = error * K + K * (error - prev_error)/time;
+float PID(float K1, float K2, float K3, float error, float prev_error, float time){
+  extern float integral;
+  integral += error * time;
+  float change = K1 * error + K2 * (error - prev_error)/time + K3 * integral;
   return change;
 }
