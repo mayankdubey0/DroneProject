@@ -23,7 +23,6 @@ Servo ESC2;
 Servo ESC3;
 Servo ESC4;
 
-
 float xG;
 float yG;
 float zG;
@@ -60,7 +59,8 @@ float time1 = millis()/1000;
 float time2 = 0;
 float elapsed_time = 0;
 
-float integral = 0;
+float integralX = 0;
+float integralY = 0;
 
 float target_x = 0;
 float target_y = 0;
@@ -73,7 +73,7 @@ float prev_errorY = 0;
 
 Adafruit_MPU6050 mpu;
 
-void setup(void) {
+void setup() {
   Serial.begin(19200);
   // Try to initialize!
   if (!mpu.begin()) {
@@ -129,10 +129,10 @@ void loop() {
     errorX = target_x - sin(data[0]/9.81);
     errorY = target_y - sin(data[1]/9.81);
 
-    motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time);
-    motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time);
-    motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time);
-    motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time);
+    motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+    motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+    motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+    motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
 
     Serial.print(motor1);
     Serial.print("/");
@@ -208,8 +208,7 @@ float kalman(float meas, float prev_guess){
   return new_guess;
 }
 
-float PID(float K1, float K2, float K3, float error, float prev_error, float time){
-  extern float integral;
+float PID(float K1, float K2, float K3, float error, float prev_error, float time, integral){
   integral += error * time;
   float change = K1 * error + K2 * (error - prev_error)/time + K3 * integral;
   return change;
