@@ -4,10 +4,10 @@
 #include <Servo.h>
 #include "ppm.h"
 
-#define THROTTLE        3
-#define ROLL            1
-#define PITCH           2
-#define YAW             4
+#define THROTTLE        2
+#define ROLL            3
+#define PITCH           4
+#define YAW             1
 #define SWITCH3WAY_1    5
 #define BUTTON          6
 #define SWITCH3WAY_2    7
@@ -75,6 +75,22 @@ Adafruit_MPU6050 mpu;
 
 void setup() {
   Serial.begin(19200);
+
+  // short throttle      =   (-ppm.read_channel(THROTTLE)+1500)/2;
+  // short roll          =   (-ppm.read_channel(ROLL)+1500)/2;
+  // short pitch         =   (-ppm.read_channel(PITCH)+1500)/2;
+  // short yaw           =   (-ppm.read_channel(YAW)+1500)/2;
+
+  short throttle      =   ppm.read_channel(THROTTLE);
+  short roll          =   ppm.read_channel(ROLL);
+  short pitch         =   ppm.read_channel(PITCH);
+  short yaw           =   ppm.read_channel(YAW);
+
+  ESC1.attach(9, 1000, 2000);
+  ESC2.attach(10, 1000, 2000);
+  ESC3.attach(11, 1000, 2000);
+  ESC4.attach(12, 1000, 2000);
+
   // Try to initialize!
   if (!mpu.begin()) {
     Serial.println("Failed to find MPU6050 chip");
@@ -84,11 +100,6 @@ void setup() {
   }
   Serial.println("MPU6050 Found!");
   delay(100);
-
-  ESC1.attach(9, 1000, 2000);
-  ESC2.attach(10, 1000, 2000);
-  ESC3.attach(11, 1000, 2000);
-  ESC4.attach(12, 1000, 2000);
 
   ppm.begin(A0, false);
 
@@ -102,10 +113,10 @@ void loop() {
     previousMillis = currentMillis;
 
     // Acquiring all the channels values
-    short throttle      =   (-ppm.read_channel(THROTTLE)+1500)/2;
-    short roll          =   (-ppm.read_channel(ROLL)+1500)/2;
-    short pitch         =   (-ppm.read_channel(PITCH)+1500)/2;
-    short yaw           =   (-ppm.read_channel(YAW)+1500)/2;
+    short throttle      =   ppm.read_channel(THROTTLE);
+    short roll          =   ppm.read_channel(ROLL);
+    short pitch         =   ppm.read_channel(PITCH);
+    short yaw           =   ppm.read_channel(YAW);
 
     /* Get new sensor events with the readings */
     sensors_event_t a, g, temp;
@@ -208,7 +219,7 @@ float kalman(float meas, float prev_guess){
   return new_guess;
 }
 
-float PID(float K1, float K2, float K3, float error, float prev_error, float time, integral){
+float PID(float K1, float K2, float K3, float error, float prev_error, float time, float integral){
   integral += error * time;
   float change = K1 * error + K2 * (error - prev_error)/time + K3 * integral;
   return change;
