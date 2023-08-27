@@ -71,10 +71,17 @@ float errorY;
 float prev_errorX = 0;
 float prev_errorY = 0;
 
+// bool joy_up = false;
+// bool joy_down = false;
+
+bool joy_up = true;
+bool joy_down = true;
+
 Adafruit_MPU6050 mpu;
 
 void setup() {
   Serial.begin(19200);
+  
 
   // short throttle      =   (-ppm.read_channel(THROTTLE)+1500)/2;
   // short roll          =   (-ppm.read_channel(ROLL)+1500)/2;
@@ -85,11 +92,6 @@ void setup() {
   short roll          =   ppm.read_channel(ROLL);
   short pitch         =   ppm.read_channel(PITCH);
   short yaw           =   ppm.read_channel(YAW);
-
-  ESC1.attach(9, 1000, 2000);
-  ESC2.attach(10, 1000, 2000);
-  ESC3.attach(11, 1000, 2000);
-  ESC4.attach(12, 1000, 2000);
 
   // Try to initialize!
   if (!mpu.begin()) {
@@ -104,61 +106,97 @@ void setup() {
   ppm.begin(A0, false);
 
   //callibrate_gyro();
+
+  ESC1.attach(9, 1000, 2000);
+  ESC2.attach(10, 1000, 2000);
+  ESC3.attach(11, 1000, 2000);
+  ESC4.attach(6, 1000, 2000);
 }
 
 
 void loop() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
 
-    // Acquiring all the channels values
+  if(!joy_up || !joy_down){
     short throttle      =   ppm.read_channel(THROTTLE);
-    short roll          =   ppm.read_channel(ROLL);
-    short pitch         =   ppm.read_channel(PITCH);
-    short yaw           =   ppm.read_channel(YAW);
+    if(throttle > 1900 && !joy_up){
+      joy_up = true;
 
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+      //ESC1.write(2000);
+      //ESC2.write(2000);
+      //ESC3.write(2000)
+      ESC4.write(1500);
+      delay(1000);
+      ESC4.write(2000);
+      //ESC4.write(1500);
+      delay(1000);
+    }
+    if(throttle < 1100 && joy_up){
+      joy_down = true;
 
-    callibrate_acc(a, g, temp);
+      ESC1.write(1500);
+      ESC2.write(1500);
+      ESC3.write(1500);
+      ESC4.write(1500);
+    }
+  }
 
-    data[0] = a.acceleration.x - acc_biasX;
-    data[1] = a.acceleration.y - acc_biasY;
-    data[2] = a.acceleration.z - acc_biasZ;
+  else{
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      previousMillis = currentMillis;
 
-    // Serial.print(rad2deg(data[0]));
-    // Serial.print("/");
-    // Serial.print(rad2deg(data[1]));
-    // Serial.print("/");
-    // Serial.println(rad2deg(data[2]));
+      // Acquiring all the channels values
+      short throttle      =   ppm.read_channel(THROTTLE);
+      short roll          =   ppm.read_channel(ROLL);
+      short pitch         =   ppm.read_channel(PITCH);
+      short yaw           =   ppm.read_channel(YAW);
 
-    time2 = millis();
-    elapsed_time = time2 - time1;
+      /* Get new sensor events with the readings */
+      sensors_event_t a, g, temp;
+      mpu.getEvent(&a, &g, &temp);
 
-    errorX = target_x - sin(data[0]/9.81);
-    errorY = target_y - sin(data[1]/9.81);
+      callibrate_acc(a, g, temp);
 
-    motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-    motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-    motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
-    motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+      data[0] = a.acceleration.x - acc_biasX;
+      data[1] = a.acceleration.y - acc_biasY;
+      data[2] = a.acceleration.z - acc_biasZ;
 
-    Serial.print(motor1);
-    Serial.print("/");
-    Serial.println(motor2);
+      Serial.print(data[0]);
+      Serial.print("/");
+      Serial.print(data[1]);
+      Serial.println("/");
+      //Serial.println(rad2deg(data[2]));
 
-    time1 = time2;
-    prev_errorX = errorX;
-    prev_errorY = errorY;
+      time2 = millis();
+      elapsed_time = time2 - time1;
 
-    ESC1.write(motor1);
-    ESC2.write(motor2);
-    ESC3.write(motor3);
-    ESC4.write(motor4);
+      errorX = target_x - sin(data[0]/9.81);
+      errorY = target_y - sin(data[1]/9.81);
+
+      motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+      motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+      motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+      motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY)-500;
+
+      // Serial.print(motor1);
+      // Serial.print(" / ");
+      // Serial.print(motor2);
+      // Serial.print(" / ");
+      // Serial.print(motor3);
+      // Serial.print(" / ");
+      // Serial.println(motor4);
+
+      time1 = time2;
+      prev_errorX = errorX;
+      prev_errorY = errorY;
+
+      ESC1.write(motor1);
+      ESC2.write(motor2);
+      ESC3.write(motor3);
+      ESC4.write(motor4);
 
 
+    }
   }
 }
 
