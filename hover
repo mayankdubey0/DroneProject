@@ -71,11 +71,11 @@ float errorY;
 float prev_errorX = 0;
 float prev_errorY = 0;
 
-// bool joy_up = false;
-// bool joy_down = false;
-
 bool joy_up = false;
 bool joy_down = false;
+
+// bool joy_up = true;
+// bool joy_down = true;
 
 Adafruit_MPU6050 mpu;
 
@@ -111,6 +111,11 @@ void setup() {
   ESC2.attach(10, 1000, 2000);
   ESC3.attach(11, 1000, 2000);
   ESC4.attach(5, 1000, 2000);
+
+  ESC1.write(2000);
+  ESC2.write(2000);
+  ESC3.write(2000);
+  ESC4.write(2000);
 }
 
 
@@ -160,22 +165,24 @@ void loop() {
       data[1] = a.acceleration.y - acc_biasY;
       data[2] = a.acceleration.z - acc_biasZ;
 
-      Serial.print(data[0]);
-      Serial.print("/");
-      Serial.print(data[1]);
-      Serial.println("/");
-      //Serial.println(rad2deg(data[2]));
+      // Serial.print(sin(data[0]/9.81));
+      // Serial.print("/");
+      // Serial.print(sin(data[1]/9.81));
+      // Serial.print("/");
+      // Serial.println(rad2deg(data[2]));
 
       time2 = millis();
       elapsed_time = time2 - time1;
 
-      errorX = target_x - sin(data[0]/9.81);
-      errorY = target_y - sin(data[1]/9.81);
+      errorX = target_x - 3*sin(data[0]/9.81);
+      errorY = target_y - 3*sin(data[1]/9.81);
 
-      motor1 = throttle + PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-      motor2 = throttle - PID(1, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-      motor3 = throttle + PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
-      motor4 = throttle - PID(1, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+      Serial.println(data[0]);
+
+      motor1 = throttle + PID(2, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+      motor2 = throttle - PID(2, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
+      motor3 = throttle + PID(2, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+      motor4 = throttle - PID(2, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
 
       // Serial.print(motor1);
       // Serial.print(" / ");
