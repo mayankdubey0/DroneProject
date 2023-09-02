@@ -10,7 +10,7 @@
 #define YAW             1
 #define SWITCH3WAY_1    5
 #define BUTTON          6
-#define SWITCH3WAY_2    7
+#define SWITCH          7
 #define POT             8 
 
 const long interval = 50;
@@ -81,7 +81,7 @@ Adafruit_MPU6050 mpu;
 
 void setup() {
   Serial.begin(19200);
-  
+  mpu.begin();
 
   // short throttle      =   (-ppm.read_channel(THROTTLE)+1500)/2;
   // short roll          =   (-ppm.read_channel(ROLL)+1500)/2;
@@ -92,6 +92,7 @@ void setup() {
   short roll          =   ppm.read_channel(ROLL);
   short pitch         =   ppm.read_channel(PITCH);
   short yaw           =   ppm.read_channel(YAW);
+
 
   // Try to initialize!
   if (!mpu.begin()) {
@@ -108,100 +109,117 @@ void setup() {
   //callibrate_gyro();
 
   ESC1.attach(9, 1000, 2000);
-  ESC2.attach(10, 1000, 2000);
+  ESC2.attach(5, 1000, 2000);
   ESC3.attach(11, 1000, 2000);
-  ESC4.attach(5, 1000, 2000);
+  ESC4.attach(10, 1000, 2000);
 
-  ESC1.write(2000);
-  ESC2.write(2000);
-  ESC3.write(2000);
-  ESC4.write(2000);
+
+  short swtch = ppm.read_channel(SWITCH);
+  if(swtch>1500){
+    ESC1.write(2000);
+    ESC2.write(2000);
+    ESC3.write(2000);
+    ESC4.write(2000);
+  }
 }
 
 
 void loop() {
-
-  if(!joy_up || !joy_down){
-    short throttle      =   ppm.read_channel(THROTTLE);
-    Serial.print(joy_up);
-    Serial.print(" / ");
-    Serial.println(joy_down);
-    if(throttle > 1900 && !joy_up){
-      joy_up = true;
-
-      ESC1.write(2000);
-      ESC2.write(2000);
-      ESC3.write(2000);
-      ESC4.write(2000);
-    }
-    if(throttle < 1100 && joy_up){
-      joy_down = true;
-
-      ESC1.write(1500);
-      ESC2.write(1500);
-      ESC3.write(1500);
-      ESC4.write(1500);
-    }
-  }
-
-  else{
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
-      previousMillis = currentMillis;
-
-      // Acquiring all the channels values
+  short swtch = ppm.read_channel(SWITCH);
+  if(swtch>1500){
+    if(!joy_up || !joy_down){
       short throttle      =   ppm.read_channel(THROTTLE);
-      short roll          =   ppm.read_channel(ROLL);
-      short pitch         =   ppm.read_channel(PITCH);
-      short yaw           =   ppm.read_channel(YAW);
+      Serial.print(joy_up);
+      Serial.print(" / ");
+      Serial.println(joy_down);
+      if(throttle > 1900 && !joy_up){
+        joy_up = true;
 
-      /* Get new sensor events with the readings */
-      sensors_event_t a, g, temp;
-      mpu.getEvent(&a, &g, &temp);
+        ESC1.write(2000);
+        ESC2.write(2000);
+        ESC3.write(2000);
+        ESC4.write(2000);
+      }
+      if(throttle < 1100 && joy_up){
+        joy_down = true;
 
-      callibrate_acc(a, g, temp);
+        ESC1.write(1500);
+        ESC2.write(1500);
+        ESC3.write(1500);
+        ESC4.write(1500);
+      }
+    }
 
-      data[0] = a.acceleration.x - acc_biasX;
-      data[1] = a.acceleration.y - acc_biasY;
-      data[2] = a.acceleration.z - acc_biasZ;
+    else{
+      unsigned long currentMillis = millis();
+      if (currentMillis - previousMillis >= interval) {
+        previousMillis = currentMillis;
 
-      // Serial.print(sin(data[0]/9.81));
-      // Serial.print("/");
-      // Serial.print(sin(data[1]/9.81));
-      // Serial.print("/");
-      // Serial.println(rad2deg(data[2]));
+        // Acquiring all the channels values
+        short throttle      =   ppm.read_channel(THROTTLE);
+        short roll          =   ppm.read_channel(ROLL);
+        short pitch         =   ppm.read_channel(PITCH);
+        short yaw           =   ppm.read_channel(YAW);
+        short swtch         =   ppm.read_channel(SWITCH);
 
-      time2 = millis();
-      elapsed_time = time2 - time1;
+        /* Get new sensor events with the readings */
+        sensors_event_t a, g, temp;
+        mpu.getEvent(&a, &g, &temp);
 
-      errorX = target_x - 3*sin(data[0]/9.81);
-      errorY = target_y - 3*sin(data[1]/9.81);
+        callibrate_acc(a, g, temp);
 
-      Serial.println(data[0]);
+        data[0] = a.acceleration.x - acc_biasX;
+        data[1] = a.acceleration.y - acc_biasY;
+        data[2] = a.acceleration.z - acc_biasZ;
 
-      motor1 = throttle + PID(2, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-      motor2 = throttle - PID(2, 1, 1, errorX, prev_errorX, elapsed_time, integralX);
-      motor3 = throttle + PID(2, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
-      motor4 = throttle - PID(2, 1, 1, errorY, prev_errorY, elapsed_time, integralY);
+        // Serial.print(sin(data[0]/9.81));
+        // Serial.print("/");
+        // Serial.print(sin(data[1]/9.81));
+        // Serial.print("/");
+        // Serial.println(rad2deg(data[2]));
 
-      // Serial.print(motor1);
-      // Serial.print(" / ");
-      // Serial.print(motor2);
-      // Serial.print(" / ");
-      // Serial.print(motor3);
-      // Serial.print(" / ");
-      // Serial.println(motor4);
+        time2 = millis();
+        elapsed_time = time2 - time1;
 
-      time1 = time2;
-      prev_errorX = errorX;
-      prev_errorY = errorY;
+        errorX = (target_x - sin(data[0]/9.81))*5;
+        errorY = (target_y - sin(data[1]/9.81))*5;
 
-      ESC1.write(motor1);
-      ESC2.write(motor2);
-      ESC3.write(motor3);
-      ESC4.write(motor4);
+        //Serial.println(data[0]);
+
+        motor1 = throttle + PID(1, 3, 1, errorX, prev_errorX, elapsed_time, integralX)-500;
+        motor2 = throttle - PID(1, 3, 1, errorX, prev_errorX, elapsed_time, integralX)-500;
+        motor3 = throttle + PID(1, 3, 1, errorY, prev_errorY, elapsed_time, integralY)-500;
+        motor4 = throttle - PID(1, 3, 1, errorY, prev_errorY, elapsed_time, integralY)-500;
+
+        time1 = time2;
+        prev_errorX = errorX;
+        prev_errorY = errorY;
+
+        //Serial.println(swtch);
+        if(motor1>900 && motor2>900 && motor3>900 && motor4>900){
+          Serial.print(motor1);
+          Serial.print(" / ");
+          Serial.print(motor2);
+          Serial.print(" / ");
+          Serial.print(motor3);
+          Serial.print(" / ");
+          Serial.println(motor4);
+
+          ESC1.write(motor1);
+          ESC2.write(motor2);
+          ESC3.write(motor3);
+          ESC4.write(motor4);
+
+        }
+        else{
+          ESC1.write(1000);
+          ESC2.write(1000);
+          ESC3.write(1000);
+          ESC4.write(1000);
+        }
 
 
+      }
     }
   }
 }
