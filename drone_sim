@@ -1,1 +1,21 @@
+classdef Drone
+    properties
+        com
+        angle
+    end
+    
+    methods
+        function obj = MyClass(center = [0, 0, 0], rpy = [0, 0, 0])
+            % Constructor
+            obj.com = center;
+            obj.angle = rpy;
+        end
+        
+        function displayProperties(obj)
+            % Display properties
+            disp(['Property1: ', num2str(obj.Property1)]);
+            disp(['Property2: ', num2str(obj.Property2)]);
+        end
+    end
+end
 
