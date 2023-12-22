@@ -5,17 +5,46 @@ classdef Drone
     end
     
     methods
-        function obj = MyClass(center = [0, 0, 0], rpy = [0, 0, 0])
-            % Constructor
-            obj.com = center;
-            obj.angle = rpy;
+        function obj = MyClass(center, rpy)
+            % Constructon
+            obj.com = center; % x, y, z
+            obj.angle = rpy; % roll, pitch, yaw a, b c
+            obj.a = rpy(1);
+            obj.b = rpy(2);
+            obj.c = rpy(3);
+            obj.rot = [[cos(obj.b)*cos(obj.c), sin(obj.a)*sin(obj.b)*cos(obj.c) - cos(obj.a)*sin(obj.c), cos(obj.a)*sin(obj.b)*cos(obj.c) + sin(obj.a)*sin(obj.c)];
+                            [cos(obj.b)*sin(obj.c), sin(obj.a)*sin(obj.b)*sin(obj.c) + cos(obj.a)*cos(obj.c), cos(obj.a)*sin(obj.b)*sin(obj.c) - sin(obj.a)*cos(obj.c)];
+                            [-sin(obj.b), sin(obj.a)*cos(obj.b), cos(obj.a)*cos(obj.b)];];
+            obj.m1 = obj.rot*[0, 0.5, 0];
+            obj.m2 = obj.rot*[0, -0.5, 0];
+            obj.m3 = obj.rot*[0.5, 0, 0];
+            obj.m4 = obj.rot*[0, -0.5, 0];
         end
         
+
+        function show_drone(obj)
+            figure;
+            plot3([obj.m1(1), obj.m2(1)], [obj.m1(2), obj.m2(2)], [obj.m1(3), obj.m2(3)], 'LineWidth', 2);
+            hold on;  % This keeps the current plot and adds the new one
+            plot3([obj.m3(1), obj.m4(1)], [obj.m3(2), obj.m4(2)], [obj.m3(3), obj.m4(3)], 'LineWidth', 2);  % Adjust 'LineWidth' as needed
+            hold off;  % This releases the hold on the current plot
+            
+            grid on;
+            xlabel('X-axis');
+            ylabel('Y-axis');
+            zlabel('Z-axis');
+            title('Two 3D Line Segments');
+        end
+
+
         function displayProperties(obj)
             % Display properties
-            disp(['Property1: ', num2str(obj.Property1)]);
-            disp(['Property2: ', num2str(obj.Property2)]);
+            disp(['Property1: ', obj.com]);
+            disp(['Property2: ', obj.angle]);
         end
     end
 end
+
+droneTest = Drone([0, 0, 0], [0, 0, 0]);
+droneTest.show_drone();
 
