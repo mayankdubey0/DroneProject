@@ -1,6 +1,7 @@
+% Define the coordinates of the endpoints of the line segment
 classdef Drone
     properties
-        com
+         com
         angle
         a
         b
@@ -11,31 +12,68 @@ classdef Drone
         m3
         m4
     end
-    
+
     methods
-        function obj = Drone(center, rpy)
+        function obj = Drone()
             % Constructon
-            obj.com = center; % x, y, z
-            obj.angle = rpy; % roll, pitch, yaw a, b c
-            obj.a = rpy(1);
-            obj.b = rpy(2);
-            obj.c = rpy(3);
+            obj.com = [0, 0, 0]; % x, y, z
+            obj.angle = [0, 0, 0]; % roll, pitch, yaw a, b c
+            obj.a = obj.angle(1);
+            obj.b = obj.angle(2);
+            obj.c = obj.angle(3);
+            yaw = obj.a;
+            pitch = obj.b;
+            roll = obj.c;
+            
+            R_yaw = [cos(yaw), -sin(yaw), 0;
+                     sin(yaw), cos(yaw), 0;
+                     0, 0, 1];
+            
+            R_pitch = [cos(pitch), 0, sin(pitch);
+                       0, 1, 0;
+                       -sin(pitch), 0, cos(pitch)];
+            
+            R_roll = [1, 0, 0;
+                      0, cos(roll), -sin(roll);
+                      0, sin(roll), cos(roll)];
+
+% Combine the rotation matrices
+            %obj.rot = (R_yaw * R_pitch * R_roll);
             obj.rot = [cos(obj.b)*cos(obj.c), sin(obj.a)*sin(obj.b)*cos(obj.c) - cos(obj.a)*sin(obj.c), cos(obj.a)*sin(obj.b)*cos(obj.c) + sin(obj.a)*sin(obj.c);
                             cos(obj.b)*sin(obj.c), sin(obj.a)*sin(obj.b)*sin(obj.c) + cos(obj.a)*cos(obj.c), cos(obj.a)*sin(obj.b)*sin(obj.c) - sin(obj.a)*cos(obj.c);
                             -sin(obj.b), sin(obj.a)*cos(obj.b), cos(obj.a)*cos(obj.b)];
-            obj.m1 = obj.rot*[0; 0.5; 0];
-            obj.m2 = obj.rot*[0; -0.5; 0];
-            obj.m3 = obj.rot*[0.5; 0; 0];
-            obj.m4 = obj.rot*[0; -0.5; 0];
+            obj.m1 = obj.rot*[0; -0.5; 0];
+            obj.m2 = obj.rot*[0; 0.5; 0];
+            obj.m3 = obj.rot*[-0.5; 0; 0];
+            obj.m4 = obj.rot*[0.5; 0; 0];
         end
-        
 
         function show_drone(obj)
             figure;
-            plot3([obj.m1(1), obj.m2(1)], [obj.m1(2), obj.m2(2)], [obj.m1(3), obj.m2(3)], 'LineWidth', 2);
-            hold on;  % This keeps the current plot and adds the new one
-            plot3([obj.m3(1), obj.m4(1)], [obj.m3(2), obj.m4(2)], [obj.m3(3), obj.m4(3)], 'LineWidth', 2);  % Adjust 'LineWidth' as needed
-            hold off;  % This releases the hold on the current plot
+            x1 = [obj.m1(1), obj.m2(1)];
+            y1 = [obj.m1(2), obj.m2(2)];
+            z1 = [obj.m1(3), obj.m2(3)];
+            %plot3(x1, y1, z1, 'b-', 'LineWidth', 2);
+            hold on;
+           
+            x2 = [obj.m3(1), obj.m4(1)];
+            y2 = [obj.m3(2), obj.m4(2)];
+            z2 = [obj.m3(3), obj.m4(3)];
+            % Plot the second line segment
+            plot3(x2, y2, z2, 'r-', 'LineWidth', 2);
+            
+            hold off;
+            disp(obj.rot);
+            disp(obj.rot*[-0.5; 0; 0]);
+            disp(obj.m3);
+            disp(obj.rot*[0.5; 0; 0]);
+            disp(obj.m4);
+
+            % figure;
+            % plot3([-0.5, 0.5], [0, 0], [0, 0], 'LineWidth', 4);
+            % hold on;  % This keeps the current plot and adds the new one
+            % plot3([0, 0], [-0.5, 0.5], [0, 0], 'LineWidth', 2);  % Adjust 'LineWidth' as needed
+            % hold off;  % This releases the hold on the current plot
             
             grid on;
             xlabel('X-axis');
@@ -44,16 +82,8 @@ classdef Drone
             title('Two 3D Line Segments');
         end
 
-
-        function displayProperties(obj)
-            % Display properties
-             disp(['Center: ', num2str(obj.com)]);
-            disp(['RPY: ', num2str(obj.angle)]);
-        end
     end
 end
 
-x1 = [0, 0, 0];
-droneTest = Drone(x1, [0, 0, 0]);
-droneTest.show_drone();
+%drone_test = Drone[];
 
