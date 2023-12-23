@@ -20,8 +20,25 @@ classdef Drone
             obj.angle = [0, 0, 0]; % roll, pitch, yaw a, b c
             obj.a = obj.angle(1);
             obj.b = obj.angle(2);
-            obj.c = obj.angle(3);            
-           
+            obj.c = obj.angle(3);
+            yaw = obj.a;
+            pitch = obj.b;
+            roll = obj.c;
+            
+            R_yaw = [cos(yaw), -sin(yaw), 0;
+                     sin(yaw), cos(yaw), 0;
+                     0, 0, 1];
+            
+            R_pitch = [cos(pitch), 0, sin(pitch);
+                       0, 1, 0;
+                       -sin(pitch), 0, cos(pitch)];
+            
+            R_roll = [1, 0, 0;
+                      0, cos(roll), -sin(roll);
+                      0, sin(roll), cos(roll)];
+
+% Combine the rotation matrices
+            %obj.rot = (R_yaw * R_pitch * R_roll);
             obj.rot = [cos(obj.b)*cos(obj.c), sin(obj.a)*sin(obj.b)*cos(obj.c) - cos(obj.a)*sin(obj.c), cos(obj.a)*sin(obj.b)*cos(obj.c) + sin(obj.a)*sin(obj.c);
                             cos(obj.b)*sin(obj.c), sin(obj.a)*sin(obj.b)*sin(obj.c) + cos(obj.a)*cos(obj.c), cos(obj.a)*sin(obj.b)*sin(obj.c) - sin(obj.a)*cos(obj.c);
                             -sin(obj.b), sin(obj.a)*cos(obj.b), cos(obj.a)*cos(obj.b)];
@@ -32,6 +49,7 @@ classdef Drone
         end
 
         function show_drone(obj)
+           
             figure;
             x1 = [obj.m1(1), obj.m2(1)];
             y1 = [obj.m1(2), obj.m2(2)];
@@ -46,18 +64,10 @@ classdef Drone
             plot3(x2, y2, z2, 'r-', 'LineWidth', 2);
             
             hold off;
-            disp(obj.rot);
-            disp(obj.rot*[-0.5; 0; 0]);
-            disp(obj.m3);
-            disp(obj.rot*[0.5; 0; 0]);
-            disp(obj.m4);
-
-            % figure;
-            % plot3([-0.5, 0.5], [0, 0], [0, 0], 'LineWidth', 4);
-            % hold on;  % This keeps the current plot and adds the new one
-            % plot3([0, 0], [-0.5, 0.5], [0, 0], 'LineWidth', 2);  % Adjust 'LineWidth' as needed
-            % hold off;  % This releases the hold on the current plot
+ 
             
+            axisLimits = [min([-10, -10, -10, 10, 10, 10]), max([-20, -20, -20, 20, 20, 20])];
+            axis(axisLimits);
             grid on;
             xlabel('X-axis');
             ylabel('Y-axis');
