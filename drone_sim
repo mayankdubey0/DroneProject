@@ -54,21 +54,39 @@ classdef Drone
             x1 = [obj.m1(1), obj.m2(1)];
             y1 = [obj.m1(2), obj.m2(2)];
             z1 = [obj.m1(3), obj.m2(3)];
-            plot3(x1, y1, z1, 'b-', 'LineWidth', 2);
+            h1 = plot3(x1, y1, z1, 'b-', 'LineWidth', 2);
             hold on;
            
             x2 = [obj.m3(1), obj.m4(1)];
             y2 = [obj.m3(2), obj.m4(2)];
             z2 = [obj.m3(3), obj.m4(3)];
             % Plot the second line segment
-            plot3(x2, y2, z2, 'r-', 'LineWidth', 2);
+            h2 = plot3(x2, y2, z2, 'r-', 'LineWidth', 2);
             
             hold off;
  
-            
-            axisLimits = [min([-10, -10, -10, 10, 10, 10]), max([-20, -20, -20, 20, 20, 20])];
-            axis(axisLimits);
             grid on;
+
+            axis([-10, 10, -10, 10, 0, 20]);
+
+            numSteps = 100;
+
+            % Animation loop
+            for step = 1:numSteps
+                % Update coordinates (you can modify this based on your needs)
+                x1 = x1 + 0.1;
+                y2 = y2 + 0.1;
+                
+                % Update line plot data
+                set(h1, 'XData', x1);
+                set(h2, 'YData', y2);
+                
+                % Pause to control the animation speed
+                pause(0.1);
+                
+                % Refresh the figure
+                drawnow;
+            end
             xlabel('X-axis');
             ylabel('Y-axis');
             zlabel('Z-axis');
