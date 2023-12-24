@@ -5,6 +5,9 @@ classdef Drone
         rot
         m1, m2, x1, y1, z1
         m3, m4, x2, y2, z2
+        motor_mass, gravity
+        motor_weights, center_weight
+        thrusts
     end
 
     methods
@@ -21,7 +24,18 @@ classdef Drone
             obj.m2 = obj.rot*[0; 0.5; 0] + obj.com;
             obj.m3 = obj.rot*[-0.5; 0; 0] + obj.com;
             obj.m4 = obj.rot*[0.5; 0; 0] + obj.com;
+
+            obj.motor_mass = 0.054;
+            obj.gravity = 9.81;
+
+            obj.motor_weights = ones(4, 1)*obj.motor_mass*obj.gravity;
+            obj.center_weight = 0.1;
+
+            obj.thrusts = zeros(4, 1);
+            
+
         end
+
 
         function show_drone(obj)
            
@@ -46,7 +60,6 @@ classdef Drone
 
             numSteps = 100;
 
-            % Animation loop
             % Animation loop
             for step = 1:numSteps
                 % Update coordinates (you can modify this based on your needs)
