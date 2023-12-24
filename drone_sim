@@ -1,67 +1,42 @@
 % Define the coordinates of the endpoints of the line segment
 classdef Drone
     properties
-         com
-        angle
-        a
-        b
-        c
+        com, angle
         rot
-        m1
-        m2
-        m3
-        m4
+        m1, m2, x1, y1, z1
+        m3, m4, x2, y2, z2
     end
 
     methods
         function obj = Drone()
             % Constructon
-            obj.com = [0, 0, 0]; % x, y, z
-            obj.angle = [0, 0, 0]; % roll, pitch, yaw a, b c
-            obj.a = obj.angle(1);
-            obj.b = obj.angle(2);
-            obj.c = obj.angle(3);
-            yaw = obj.a;
-            pitch = obj.b;
-            roll = obj.c;
+            obj.com = [0; 0; 0]; % x, y, z
+            obj.angle = [0; 0; 0]; % roll, pitch, yaw a, b c
             
-            R_yaw = [cos(yaw), -sin(yaw), 0;
-                     sin(yaw), cos(yaw), 0;
-                     0, 0, 1];
-            
-            R_pitch = [cos(pitch), 0, sin(pitch);
-                       0, 1, 0;
-                       -sin(pitch), 0, cos(pitch)];
-            
-            R_roll = [1, 0, 0;
-                      0, cos(roll), -sin(roll);
-                      0, sin(roll), cos(roll)];
+            obj.rot = [cos(obj.angle(2))*cos(obj.angle(3)), sin(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) - cos(obj.angle(1))*sin(obj.angle(3)), cos(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) + sin(obj.angle(1))*sin(obj.angle(3));
+                        cos(obj.angle(2))*sin(obj.angle(3)), sin(obj.angle(1))*sin(obj.angle(2))*sin(obj.angle(3)) + cos(obj.angle(1))*cos(obj.angle(3)), cos(obj.angle(1))*sin(obj.angle(2))*sin(obj.angle(3)) - sin(obj.angle(1))*cos(obj.angle(3));
+                        -sin(obj.angle(2)), sin(obj.angle(1))*cos(obj.angle(2)), cos(obj.angle(1))*cos(obj.angle(2))];
 
-% Combine the rotation matrices
-            %obj.rot = (R_yaw * R_pitch * R_roll);
-            obj.rot = [cos(obj.b)*cos(obj.c), sin(obj.a)*sin(obj.b)*cos(obj.c) - cos(obj.a)*sin(obj.c), cos(obj.a)*sin(obj.b)*cos(obj.c) + sin(obj.a)*sin(obj.c);
-                            cos(obj.b)*sin(obj.c), sin(obj.a)*sin(obj.b)*sin(obj.c) + cos(obj.a)*cos(obj.c), cos(obj.a)*sin(obj.b)*sin(obj.c) - sin(obj.a)*cos(obj.c);
-                            -sin(obj.b), sin(obj.a)*cos(obj.b), cos(obj.a)*cos(obj.b)];
-            obj.m1 = obj.rot*[0; -0.5; 0];
-            obj.m2 = obj.rot*[0; 0.5; 0];
-            obj.m3 = obj.rot*[-0.5; 0; 0];
-            obj.m4 = obj.rot*[0.5; 0; 0];
+            obj.m1 = obj.rot*[0; -0.5; 0] + obj.com;
+            obj.m2 = obj.rot*[0; 0.5; 0] + obj.com;
+            obj.m3 = obj.rot*[-0.5; 0; 0] + obj.com;
+            obj.m4 = obj.rot*[0.5; 0; 0] + obj.com;
         end
 
         function show_drone(obj)
            
             figure;
-            x1 = [obj.m1(1), obj.m2(1)];
-            y1 = [obj.m1(2), obj.m2(2)];
-            z1 = [obj.m1(3), obj.m2(3)];
-            h1 = plot3(x1, y1, z1, 'b-', 'LineWidth', 2);
+            obj.x1 = [obj.m1(1), obj.m2(1)];
+            obj.y1 = [obj.m1(2), obj.m2(2)];
+            obj.z1 = [obj.m1(3), obj.m2(3)];
+            h1 = plot3(obj.x1, obj.y1, obj.z1, 'b-', 'LineWidth', 2);
             hold on;
            
-            x2 = [obj.m3(1), obj.m4(1)];
-            y2 = [obj.m3(2), obj.m4(2)];
-            z2 = [obj.m3(3), obj.m4(3)];
+            obj.x2 = [obj.m3(1), obj.m4(1)];
+            obj.y2 = [obj.m3(2), obj.m4(2)];
+            obj.z2 = [obj.m3(3), obj.m4(3)];
             % Plot the second line segment
-            h2 = plot3(x2, y2, z2, 'r-', 'LineWidth', 2);
+            h2 = plot3(obj.x2, obj.y2, obj.z2, 'r-', 'LineWidth', 2);
             
             hold off;
  
@@ -72,21 +47,51 @@ classdef Drone
             numSteps = 100;
 
             % Animation loop
+            % Animation loop
             for step = 1:numSteps
                 % Update coordinates (you can modify this based on your needs)
-                x1 = x1 + 0.1;
-                y2 = y2 + 0.1;
-                
+
+                % set new COM
+                del_x = 0;
+                del_y = 0;
+                del_z = 0.1;
+                obj.com = [obj.com(1) + del_x; obj.com(2) + del_y; obj.com(3) + del_z];
+                disp(obj.com);
+
+                %set new angles and rot
+                del_roll = 0;
+                del_pitch = 0;
+                del_yaw = 0.1;
+                obj.angle = [obj.angle(1) + del_roll; obj.angle(2) + del_pitch; obj.angle(3) + del_yaw];
+
+                obj.rot = [cos(obj.angle(2))*cos(obj.angle(3)), sin(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) - cos(obj.angle(1))*sin(obj.angle(3)), cos(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) + sin(obj.angle(1))*sin(obj.angle(3));
+                        cos(obj.angle(2))*sin(obj.angle(3)), sin(obj.angle(1))*sin(obj.angle(2))*sin(obj.angle(3)) + cos(obj.angle(1))*cos(obj.angle(3)), cos(obj.angle(1))*sin(obj.angle(2))*sin(obj.angle(3)) - sin(obj.angle(1))*cos(obj.angle(3));
+                        -sin(obj.angle(2)), sin(obj.angle(1))*cos(obj.angle(2)), cos(obj.angle(1))*cos(obj.angle(2))];
+
+            
+                obj.m1 = obj.rot*[0; -0.5; 0] + obj.com;
+                obj.m2 = obj.rot*[0; 0.5; 0] + obj.com;
+                obj.m3 = obj.rot*[-0.5; 0; 0] + obj.com;
+                obj.m4 = obj.rot*[0.5; 0; 0] + obj.com;
+            
+                obj.x1 = [obj.m1(1), obj.m2(1)];
+                obj.y1 = [obj.m1(2), obj.m2(2)];
+                obj.z1 = [obj.m1(3), obj.m2(3)];
+            
+                obj.x2 = [obj.m3(1), obj.m4(1)];
+                obj.y2 = [obj.m3(2), obj.m4(2)];
+                obj.z2 = [obj.m3(3), obj.m4(3)];
+            
                 % Update line plot data
-                set(h1, 'XData', x1);
-                set(h2, 'YData', y2);
-                
+                set(h1, 'XData', obj.x1, 'YData', obj.y1, 'ZData', obj.z1);
+                set(h2, 'XData', obj.x2, 'YData', obj.y2, 'ZData', obj.z2);
+            
                 % Pause to control the animation speed
                 pause(0.1);
                 
                 % Refresh the figure
                 drawnow;
-            end
+            end            
             xlabel('X-axis');
             ylabel('Y-axis');
             zlabel('Z-axis');
@@ -95,6 +100,4 @@ classdef Drone
 
     end
 end
-
-%drone_test = Drone[];
 
