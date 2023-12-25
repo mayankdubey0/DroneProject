@@ -40,7 +40,7 @@ classdef Drone
             obj.motor_weights = ones(4, 1)*obj.motor_mass*obj.gravity;
             obj.center_mass = 0.1;
 
-            obj.thrusts = zeros(4, 1) + [10; 10; 10; 10];
+            obj.thrusts = [0.5; 0.5; 0.5; 0.5];
             obj.net_forces = zeros(3, 1);
             obj.net_forces(3) = (ones(1,4)*obj.motor_weights + obj.center_mass*obj.gravity); % gravitational force
 
@@ -94,7 +94,7 @@ classdef Drone
  
             grid on;
 
-            axis([-10, 10, -10, 10, 0, 20]);
+            axis([-10, 10, -10, 10, 0, 100]);
 
             numSteps = 50;
 
@@ -103,16 +103,16 @@ classdef Drone
                 % Update coordinates (you can modify this based on your needs)
                 [accel_trans, accel_ang] = obj.calc_accel();
                 % set new COM
-                del_x = accel_trans(1)*0.5*0.1^2;
-                del_y = accel_trans(2)*0.5*0.1^2;
-                del_z = accel_trans(3)*0.5*0.1^2;
+                del_x = accel_trans(1)*0.5*(0.1*step)^2;
+                del_y = accel_trans(2)*0.5*(0.1*step)^2;
+                del_z = accel_trans(3)*0.5*(0.1*step)^2;
                 obj.com = [obj.com(1) + del_x; obj.com(2) + del_y; obj.com(3) + del_z];
-                disp(obj.com);
+                disp(accel_trans);
 
                 %set new angles and rot
-                del_roll = norm(accel_ang(1))*0.5*0.1^2;
-                del_pitch = norm(accel_ang(2))*0.5*0.1^2;
-                del_yaw = norm(accel_ang(3))*0.5*0.1^2;
+                del_roll = norm(accel_ang(1))*0.5*(0.1*step)^2;
+                del_pitch = norm(accel_ang(2))*0.5*(0.1*step)^2;
+                del_yaw = norm(accel_ang(3))*0.5*(0.1*step)^2;
                 obj.angle = [obj.angle(1) + del_roll; obj.angle(2) + del_pitch; obj.angle(3) + del_yaw];
 
                 obj.rot = [cos(obj.angle(2))*cos(obj.angle(3)), sin(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) - cos(obj.angle(1))*sin(obj.angle(3)), cos(obj.angle(1))*sin(obj.angle(2))*cos(obj.angle(3)) + sin(obj.angle(1))*sin(obj.angle(3));
