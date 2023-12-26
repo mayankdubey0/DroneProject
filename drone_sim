@@ -11,6 +11,8 @@ classdef Drone < handle
         net_forces, net_moments
         v_x, v_y, v_z
         w_roll, w_pitch, w_yaw
+        m1_Icz, m2_Icz, m3_Icz, m4_Icz
+        w_m1, w_m2, w_m3, w_m4
     end
 
     methods
