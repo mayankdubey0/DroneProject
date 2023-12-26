@@ -16,8 +16,8 @@ classdef Drone
     methods
         function obj = Drone()
             % Constructon
-            obj.com = [0; 0; 20]; % x, y, z
-            obj.angle = [0; 0; 0]; % roll, pitch, yaw a, b c
+            obj.com = [0; 0; 50]; % x, y, z
+            obj.angle = [0; 1; 0]; % roll, pitch, yaw a, b c
 
             obj.v_x = 0;
             obj.v_y = 0;
@@ -51,7 +51,7 @@ classdef Drone
             obj.motor_weights = ones(4, 1)*obj.motor_mass*obj.gravity;
             obj.center_mass = 0.1;
 
-            obj.thrusts = [1; 0; 0; 0];
+            obj.thrusts = [1; 0; 1; 0];
             obj.net_forces = zeros(3, 1);
             obj.net_forces(3) = (ones(1,4)*obj.motor_weights + obj.center_mass*obj.gravity); % gravitational force
 
